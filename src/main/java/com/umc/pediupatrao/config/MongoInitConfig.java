@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Configuration
 public class MongoInitConfig implements CommandLineRunner {
-
     @Autowired
     private MongoTemplate mongoTemplate;
 

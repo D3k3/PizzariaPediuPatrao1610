@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Lista de Pedidos</title>
 </head>
@@ -11,9 +12,12 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
+
+        <a th:href="@{/pedidos/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('GERENTE','ATENDENTE')">
+            <i class="bi bi-plus-lg me-1"></i> Novo Pedido
+        </a>
     </div>
 
-    <!-- Mensagens de feedback -->
     <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <span th:text="${sucesso}"></span>
@@ -25,42 +29,92 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Tabela -->
+    <div id="pedidos-alerta" class="alert d-none" role="alert"></div>
+
     <div class="card shadow-sm">
-        <div class="card-body p-0">
+        <div class="card-body p-0 table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th class="ps-4">ID</th>
-                        <th>Cliente ID</th>
-                        <th>Tipo de Pizza</th>
-                        <th>Sabor</th>
-                        <th>Quantidade</th>
+                        <th class="ps-4">Pedido</th>
+                        <th>Itens</th>
+                        <th>Valores (R$)</th>
                         <th>Status</th>
+                        <th>Entrada</th>
+                        <th>Saída / Cancelamento</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Lista vazia -->
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="6" class="text-center text-muted py-5">
+                        <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                             Nenhum pedido encontrado.
                         </td>
                     </tr>
-                    <!-- Linhas -->
                     <tr th:each="pedido : ${pedidos}">
-                        <td class="ps-4 text-muted" th:text="${pedido.id}"></td>
-                        <td th:text="${pedido.clienteId}"></td>
-                        <td th:text="${pedido.tipoPizza}"></td>
-                        <td th:text="${pedido.sabor}"></td>
-                        <td th:text="${pedido.quantidade}"></td>
+
+                        <td class="ps-4">
+                            <div class="fw-semibold" th:text="${nomesClientes[pedido.clienteId]} ?: 'Cliente não encontrado'"></div>
+                            <div class="small text-muted" th:if="${pedido.tipoAtendimento != null}"
+                                 th:text="${pedido.tipoAtendimento.descricao}"></div>
+                            <code class="small text-muted" th:text="${pedido.id}"></code>
+                        </td>
+
                         <td>
-                            <span class="badge"
-                                  th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
-                                                  (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
-                                                  (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
-                                  th:text="${pedido.status}">
-                            </span>
+                            <ul class="list-unstyled small mb-0" th:unless="${#lists.isEmpty(pedido.itens)}">
+                                <li th:each="item : ${pedido.itens}"
+                                    th:text="${item.quantidade + 'x ' + item.nomeProduto + ' — ' + #numbers.formatDecimal(item.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></li>
+                            </ul>
+                            <span class="small text-muted" th:if="${#lists.isEmpty(pedido.itens)}"
+                                  th:text="'(legado) ' + (${pedido.quantidade} ?: '') + ' ' + (${pedido.tipoPizza} ?: '') + ' ' + (${pedido.sabor} ?: '')"></span>
+                        </td>
+
+                        <td class="small">
+                            <th:block th:if="${pedido.valorTotal != null}">
+                                <div>Bruto: <span th:text="${#numbers.formatDecimal(pedido.valorBruto, 1, 'POINT', 2, 'COMMA')}"></span></div>
+                                <div th:if="${pedido.percentualDesconto != null}" class="text-success">
+                                    Desconto: <span th:text="${#numbers.formatDecimal(pedido.percentualDesconto, 1, 'POINT', 2, 'COMMA')} + '%'"></span>
+                                </div>
+                                <div class="fw-bold">Total: <span th:text="${#numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}"></span></div>
+                            </th:block>
+                            <span class="text-muted" th:if="${pedido.valorTotal == null}">—</span>
+                        </td>
+
+                        <td>
+                            <span class="badge" th:if="${pedido.status != null}"
+                                  th:classappend="${pedido.status.name() == 'RECEBIDO'} ? 'bg-secondary' :
+                                                  (${pedido.status.name() == 'EM_PREPARACAO'} ? 'bg-warning text-dark' :
+                                                  (${pedido.status.name() == 'PRONTO'} ? 'bg-info text-dark' :
+                                                  (${pedido.status.name() == 'CANCELADO'} ? 'bg-danger' :
+                                                  (${pedido.status.name() == 'FINALIZADO'} ? 'bg-success' : 'bg-primary'))))"
+                                  th:text="${pedido.status.descricao}"></span>
+                            <details class="small mt-1" th:unless="${#lists.isEmpty(pedido.historicoStatus)}">
+                                <summary class="text-muted">Histórico</summary>
+                                <ul class="list-unstyled mb-0">
+                                    <li th:each="h : ${pedido.historicoStatus}"
+                                        th:text="${#temporals.format(h.dataHora, 'dd/MM HH:mm')} + ' · ' + ${h.status.descricao} + ' · ' + ${h.usuario}"></li>
+                                </ul>
+                            </details>
+                        </td>
+
+                        <td class="small">
+                            <th:block th:if="${pedido.dataEntrada != null}">
+                                <div th:text="${#temporals.format(pedido.dataEntrada, 'dd/MM/yyyy HH:mm')}"></div>
+                                <div class="text-muted" th:text="'por ' + ${pedido.criadoPor}"></div>
+                            </th:block>
+                            <span class="text-muted" th:if="${pedido.dataEntrada == null}">—</span>
+                        </td>
+
+                        <td class="small">
+                            <th:block th:if="${pedido.dataSaida != null}">
+                                <div th:text="${#temporals.format(pedido.dataSaida, 'dd/MM/yyyy HH:mm')}"></div>
+                                <div class="text-muted" th:text="'por ' + ${pedido.responsavelSaida}"></div>
+                            </th:block>
+                            <th:block th:if="${pedido.cancelado}">
+                                <div class="text-danger" th:text="'Cancelado em ' + ${#temporals.format(pedido.dataCancelamento, 'dd/MM/yyyy HH:mm')} + ' por ' + ${pedido.canceladoPor}"></div>
+                                <div class="fst-italic" th:text="${pedido.justificativaCancelamento}"></div>
+                            </th:block>
+                            <span class="text-muted" th:if="${pedido.dataSaida == null and !pedido.cancelado}">—</span>
                         </td>
                     </tr>
                 </tbody>
