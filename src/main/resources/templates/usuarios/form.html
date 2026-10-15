@@ -12,20 +12,25 @@
             <i class="bi bi-arrow-left"></i>
         </a>
         <h2 class="fw-bold mb-0">
-            <span th:text="${usuario.id != null} ? 'Editar Usuário' : 'Novo Usuário'"></span>
+            <span th:text="${usuarioId != null} ? 'Editar Usuário' : 'Novo Usuário'"></span>
         </h2>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert" style="max-width: 540px;">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
     <div class="card shadow-sm" style="max-width: 540px;">
         <div class="card-body p-4">
 
-            <form th:action="${usuario.id != null}
-                        ? @{/usuarios/editar/{id}(id=${usuario.id})}
+            <form th:action="${usuarioId != null}
+                        ? @{/usuarios/editar/{id}(id=${usuarioId})}
                         : @{/usuarios/salvar}"
-                  th:object="${usuario}"
+                  th:object="${usuarioForm}"
                   method="post">
 
-                <!-- Username -->
                 <div class="mb-3">
                     <label for="username" class="form-label fw-medium">
                         <i class="bi bi-person me-1"></i>Username
@@ -35,14 +40,15 @@
                            class="form-control"
                            th:field="*{username}"
                            placeholder="Ex: joao.silva"
+                           minlength="3" maxlength="30"
                            required/>
+                    <div class="form-text">De 3 a 30 caracteres: letras, números, ponto, hífen e sublinhado.</div>
                 </div>
 
-                <!-- Senha -->
                 <div class="mb-3">
                     <label for="password" class="form-label fw-medium">
                         <i class="bi bi-lock me-1"></i>Senha
-                        <small class="text-muted fw-normal" th:if="${usuario.id != null}">
+                        <small class="text-muted fw-normal" th:if="${usuarioId != null}">
                             — deixe em branco para manter a atual
                         </small>
                     </label>
@@ -52,30 +58,29 @@
                                class="form-control"
                                th:field="*{password}"
                                placeholder="••••••••"
-                               th:required="${usuario.id == null}"/>
+                               autocomplete="new-password"
+                               th:required="${usuarioId == null}"/>
                         <button type="button" class="btn btn-outline-secondary" id="togglePassword">
                             <i class="bi bi-eye" id="eyeIcon"></i>
                         </button>
                     </div>
+                    <div class="form-text">Mínimo de 8 caracteres.</div>
                 </div>
 
-                <!-- Role -->
                 <div class="mb-4">
-                    <label for="role" class="form-label fw-medium">
+                    <label for="perfil" class="form-label fw-medium">
                         <i class="bi bi-shield me-1"></i>Perfil
                     </label>
-                    <select id="role" class="form-select" th:field="*{role}" required>
+                    <select id="perfil" class="form-select" th:field="*{perfil}" required>
                         <option value="" disabled>Selecione um perfil</option>
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="USER">USER</option>
+                        <option th:each="p : ${perfis}" th:value="${p}" th:text="${p}"></option>
                     </select>
                 </div>
 
-                <!-- Botões -->
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg me-1"></i>
-                        <span th:text="${usuario.id != null} ? 'Salvar Alterações' : 'Criar Usuário'"></span>
+                        <span th:text="${usuarioId != null} ? 'Salvar Alterações' : 'Criar Usuário'"></span>
                     </button>
                     <a href="/usuarios" class="btn btn-outline-secondary">Cancelar</a>
                 </div>
@@ -85,7 +90,7 @@
     </div>
 
     <script>
-        // Toggle mostrar/ocultar senha
+
         document.getElementById('togglePassword').addEventListener('click', function () {
             const input = document.getElementById('password');
             const icon  = document.getElementById('eyeIcon');
