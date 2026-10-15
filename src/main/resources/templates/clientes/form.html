@@ -16,6 +16,11 @@
         </h2>
     </div>
 
+    <div class="alert alert-danger" th:if="${erro}" role="alert" style="max-width: 600px;">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}"></span>
+    </div>
+
     <div class="card shadow-sm" style="max-width: 600px;">
         <div class="card-body p-4">
 
@@ -25,7 +30,6 @@
                   th:object="${cliente}"
                   method="post">
 
-                <!-- Nome -->
                 <div class="mb-3">
                     <label for="nome" class="form-label fw-medium">
                         <i class="bi bi-person me-1"></i>Nome
@@ -38,7 +42,6 @@
                            required/>
                 </div>
 
-                <!-- Telefone -->
                 <div class="mb-3">
                     <label for="telefone" class="form-label fw-medium">
                         <i class="bi bi-telephone me-1"></i>Telefone
@@ -54,7 +57,6 @@
                 <hr class="my-3"/>
                 <p class="fw-medium mb-3"><i class="bi bi-geo-alt me-1"></i>Endereço</p>
 
-                <!-- CEP -->
                 <div class="mb-3">
                     <label for="cep" class="form-label fw-medium">CEP</label>
                     <div class="input-group">
@@ -73,7 +75,6 @@
                     </div>
                 </div>
 
-                <!-- Logradouro -->
                 <div class="mb-3">
                     <label for="logradouro" class="form-label fw-medium">Logradouro</label>
                     <input type="text"
@@ -83,7 +84,6 @@
                            placeholder="Ex: Rua das Flores"/>
                 </div>
 
-                <!-- Número + Complemento -->
                 <div class="row mb-3">
                     <div class="col-4">
                         <label for="numero" class="form-label fw-medium">Número</label>
@@ -103,7 +103,6 @@
                     </div>
                 </div>
 
-                <!-- Bairro -->
                 <div class="mb-3">
                     <label for="bairro" class="form-label fw-medium">Bairro</label>
                     <input type="text"
@@ -113,7 +112,6 @@
                            placeholder="Ex: Centro"/>
                 </div>
 
-                <!-- Cidade + Estado -->
                 <div class="row mb-4">
                     <div class="col-8">
                         <label for="cidade" class="form-label fw-medium">Cidade</label>
@@ -134,7 +132,6 @@
                     </div>
                 </div>
 
-                <!-- Botões -->
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg me-1"></i>
@@ -148,17 +145,15 @@
     </div>
 
     <script>
-        // Máscara de CEP
+
         document.getElementById('cep').addEventListener('input', function () {
             let v = this.value.replace(/\D/g, '');
             if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
             this.value = v;
 
-            // Busca automática ao completar 9 caracteres (00000-000)
             if (this.value.length === 9) buscarCep();
         });
 
-        // Busca ao clicar no botão
         document.getElementById('btnBuscarCep').addEventListener('click', buscarCep);
 
         async function buscarCep() {
@@ -182,7 +177,6 @@
                 document.getElementById('cidade').value     = data.localidade  || '';
                 document.getElementById('estado').value     = data.uf          || '';
 
-                // Foca no campo número após preencher
                 document.getElementById('numero').focus();
 
             } catch (e) {
@@ -191,7 +185,6 @@
             }
         }
 
-        // Máscara de telefone
         document.getElementById('telefone').addEventListener('input', function () {
             let v = this.value.replace(/\D/g, '');
             if (v.length <= 10) {

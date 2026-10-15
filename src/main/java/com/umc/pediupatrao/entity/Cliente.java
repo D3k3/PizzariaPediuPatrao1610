@@ -5,13 +5,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "clientes")
 public class Cliente {
-
     @Id
     private String id;
     private String nome;
     private String telefone;
 
-    // Endereço completo
     private String cep;
     private String logradouro;
     private String numero;
@@ -20,8 +18,23 @@ public class Cliente {
     private String cidade;
     private String estado;
 
-    // Mantido para compatibilidade com dados antigos
     private String endereco;
+
+    public Cliente copia() {
+        Cliente c = new Cliente();
+        c.id = id;
+        c.nome = nome;
+        c.telefone = telefone;
+        c.cep = cep;
+        c.logradouro = logradouro;
+        c.numero = numero;
+        c.complemento = complemento;
+        c.bairro = bairro;
+        c.cidade = cidade;
+        c.estado = estado;
+        c.endereco = endereco;
+        return c;
+    }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
