@@ -27,7 +27,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/** Regras do UsuarioService com Mockito puro (sem Spring, sem MongoDB). */
 class UsuarioServiceTest {
+
     private UsuarioRepository repo;
     private PasswordEncoder encoder;
     private UsuarioService service;
@@ -67,6 +69,8 @@ class UsuarioServiceTest {
         r.setPerfil(perfil);
         return r;
     }
+
+    // ---------- criar ----------
 
     @Test
     void criarCodificaASenhaENuncaGuardaEmTextoClaro() {
@@ -108,6 +112,8 @@ class UsuarioServiceTest {
                 () -> service.criar(request("maria", "", Perfil.ATENDENTE)));
         verify(repo, never()).save(any());
     }
+
+    // ---------- atualizar ----------
 
     @Test
     void atualizarSemSenhaMantemOHashAtual() {
@@ -170,6 +176,8 @@ class UsuarioServiceTest {
         assertEquals(Perfil.ATENDENTE, resposta.getPerfil());
     }
 
+    // ---------- excluir ----------
+
     @Test
     void naoPermiteExcluirASiMesmo() {
         logarComo("admin");
@@ -192,6 +200,7 @@ class UsuarioServiceTest {
 
     @Test
     void semAutenticacaoNoContextoNenhumaRegraDeSiMesmoSeAplica() {
+        // Contexto vazio: a regra "de si mesmo" não se aplica; só vale a do último ADMIN
         when(repo.findById("3")).thenReturn(Optional.of(usuario("3", "joao", Perfil.ATENDENTE)));
 
         service.excluir("3");

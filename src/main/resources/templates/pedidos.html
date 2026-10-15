@@ -12,7 +12,7 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
-
+        <!-- Complemento visual; a proteção real está no SecurityConfig -->
         <a th:href="@{/pedidos/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('GERENTE','ATENDENTE')">
             <i class="bi bi-plus-lg me-1"></i> Novo Pedido
         </a>
@@ -28,7 +28,7 @@
         <span th:text="${erro}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-
+    <!-- Mensagens das ações via API (preenchidas com textContent) -->
     <div id="pedidos-alerta" class="alert d-none" role="alert"></div>
 
     <div class="card shadow-sm">
@@ -42,6 +42,7 @@
                         <th>Status</th>
                         <th>Entrada</th>
                         <th>Saída / Cancelamento</th>
+                        <th class="text-end pe-4" sec:authorize="hasAnyRole('GERENTE','ATENDENTE')">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,7 +53,7 @@
                         </td>
                     </tr>
                     <tr th:each="pedido : ${pedidos}">
-
+                        <!-- Pedido: cliente, tipo e id -->
                         <td class="ps-4">
                             <div class="fw-semibold" th:text="${nomesClientes[pedido.clienteId]} ?: 'Cliente não encontrado'"></div>
                             <div class="small text-muted" th:if="${pedido.tipoAtendimento != null}"
@@ -60,6 +61,7 @@
                             <code class="small text-muted" th:text="${pedido.id}"></code>
                         </td>
 
+                        <!-- Itens (ou campos do modelo antigo) -->
                         <td>
                             <ul class="list-unstyled small mb-0" th:unless="${#lists.isEmpty(pedido.itens)}">
                                 <li th:each="item : ${pedido.itens}"
@@ -69,6 +71,7 @@
                                   th:text="'(legado) ' + (${pedido.quantidade} ?: '') + ' ' + (${pedido.tipoPizza} ?: '') + ' ' + (${pedido.sabor} ?: '')"></span>
                         </td>
 
+                        <!-- Valores -->
                         <td class="small">
                             <th:block th:if="${pedido.valorTotal != null}">
                                 <div>Bruto: <span th:text="${#numbers.formatDecimal(pedido.valorBruto, 1, 'POINT', 2, 'COMMA')}"></span></div>
@@ -80,6 +83,7 @@
                             <span class="text-muted" th:if="${pedido.valorTotal == null}">—</span>
                         </td>
 
+                        <!-- Status + histórico -->
                         <td>
                             <span class="badge" th:if="${pedido.status != null}"
                                   th:classappend="${pedido.status.name() == 'RECEBIDO'} ? 'bg-secondary' :
@@ -97,6 +101,7 @@
                             </details>
                         </td>
 
+                        <!-- Entrada -->
                         <td class="small">
                             <th:block th:if="${pedido.dataEntrada != null}">
                                 <div th:text="${#temporals.format(pedido.dataEntrada, 'dd/MM/yyyy HH:mm')}"></div>
@@ -105,6 +110,7 @@
                             <span class="text-muted" th:if="${pedido.dataEntrada == null}">—</span>
                         </td>
 
+                        <!-- Saída ou cancelamento -->
                         <td class="small">
                             <th:block th:if="${pedido.dataSaida != null}">
                                 <div th:text="${#temporals.format(pedido.dataSaida, 'dd/MM/yyyy HH:mm')}"></div>
@@ -116,6 +122,28 @@
                             </th:block>
                             <span class="text-muted" th:if="${pedido.dataSaida == null and !pedido.cancelado}">—</span>
                         </td>
+
+                        <!-- Ações: status para GERENTE e ATENDENTE; desconto e cancelamento só do GERENTE (complemento visual; o backend valida perfil e regra) -->
+                        <td class="text-end pe-4 text-nowrap" sec:authorize="hasAnyRole('GERENTE','ATENDENTE')">
+                            <button type="button" class="btn btn-sm btn-outline-primary mb-1"
+                                    th:each="proximo : ${proximosStatus[pedido.id]}"
+                                    data-acao="status"
+                                    th:attr="data-pedido=${pedido.id},data-status=${proximo.name()}"
+                                    th:text="'→ ' + ${proximo.descricao}"></button>
+                            <th:block sec:authorize="hasRole('GERENTE')">
+                                <th:block th:if="${pedido.status != null and pedido.status.antesDaSaida}">
+                                    <button type="button" class="btn btn-sm btn-outline-success mb-1" data-acao="desconto"
+                                            th:if="${pedido.valorBruto != null}"
+                                            th:attr="data-pedido=${pedido.id}">
+                                        <i class="bi bi-percent"></i> Desconto
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger mb-1" data-acao="cancelar"
+                                            th:attr="data-pedido=${pedido.id}">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </button>
+                                </th:block>
+                            </th:block>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -124,6 +152,134 @@
             Total: <strong th:text="${#lists.size(pedidos)}"></strong> pedido(s)
         </div>
     </div>
+
+    <!-- Modais só para o GERENTE; o script serve GERENTE (status, desconto, cancelamento) e ATENDENTE (status) -->
+    <th:block sec:authorize="hasRole('GERENTE')">
+        <div class="modal fade" id="modal-cancelar" tabindex="-1" aria-labelledby="titulo-cancelar" aria-hidden="true">
+            <div class="modal-dialog">
+                <form class="modal-content" id="form-cancelar">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="titulo-cancelar">Cancelar pedido</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="justificativa" class="form-label">Justificativa (obrigatória)</label>
+                        <textarea id="justificativa" class="form-control" rows="3" maxlength="500" required></textarea>
+                        <div class="text-danger small mt-2 d-none" data-erro></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-desconto" tabindex="-1" aria-labelledby="titulo-desconto" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <form class="modal-content" id="form-desconto">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="titulo-desconto">Aplicar desconto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="percentual" class="form-label">Percentual (até 20%)</label>
+                        <div class="input-group">
+                            <input type="number" id="percentual" class="form-control" step="0.01" required>
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">Substitui o desconto anterior. O total é recalculado no servidor.</div>
+                        <div class="text-danger small mt-2 d-none" data-erro></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-success">Aplicar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block sec:authorize="hasAnyRole('GERENTE','ATENDENTE')">
+        <script>
+            (() => {
+                const alerta = document.getElementById('pedidos-alerta');
+                let pedidoSelecionado = null;
+
+                function mostrarErro(destino, mensagem) {
+                    destino.textContent = mensagem;
+                    destino.classList.remove('d-none');
+                    if (destino === alerta) {
+                        alerta.classList.add('alert-danger');
+                    }
+                }
+
+                function urlPedido(id, sufixo) {
+                    return '/api/pedidos/' + encodeURIComponent(id) + sufixo;
+                }
+
+                // Avançar status
+                document.querySelectorAll('[data-acao="status"]').forEach(botao => {
+                    botao.addEventListener('click', async () => {
+                        botao.disabled = true;
+                        try {
+                            const status = encodeURIComponent(botao.dataset.status);
+                            await PediuPatrao.enviar('PUT', urlPedido(botao.dataset.pedido, '/status?status=' + status));
+                            location.reload();
+                        } catch (e) {
+                            mostrarErro(alerta, e.message);
+                            botao.disabled = false;
+                        }
+                    });
+                });
+
+                // Abrir modais
+                function abrirModal(idModal) {
+                    return botao => botao.addEventListener('click', () => {
+                        pedidoSelecionado = botao.dataset.pedido;
+                        const modal = document.getElementById(idModal);
+                        modal.querySelector('form').reset();
+                        modal.querySelector('[data-erro]').classList.add('d-none');
+                        bootstrap.Modal.getOrCreateInstance(modal).show();
+                    });
+                }
+                document.querySelectorAll('[data-acao="cancelar"]').forEach(abrirModal('modal-cancelar'));
+                document.querySelectorAll('[data-acao="desconto"]').forEach(abrirModal('modal-desconto'));
+
+                // Confirmar cancelamento (só existe para o GERENTE)
+                const formCancelar = document.getElementById('form-cancelar');
+                if (formCancelar) {
+                    formCancelar.addEventListener('submit', async evento => {
+                        evento.preventDefault();
+                        const form = evento.target;
+                        try {
+                            await PediuPatrao.enviar('POST', urlPedido(pedidoSelecionado, '/cancelar'),
+                                { justificativa: document.getElementById('justificativa').value });
+                            location.reload();
+                        } catch (e) {
+                            mostrarErro(form.querySelector('[data-erro]'), e.message);
+                        }
+                    });
+                }
+
+                // Aplicar desconto (só existe para o GERENTE; o valor vai como texto para não perder precisão)
+                const formDesconto = document.getElementById('form-desconto');
+                if (formDesconto) {
+                    formDesconto.addEventListener('submit', async evento => {
+                        evento.preventDefault();
+                        const form = evento.target;
+                        try {
+                            await PediuPatrao.enviar('POST', urlPedido(pedidoSelecionado, '/desconto'),
+                                { percentual: document.getElementById('percentual').value });
+                            location.reload();
+                        } catch (e) {
+                            mostrarErro(form.querySelector('[data-erro]'), e.message);
+                        }
+                    });
+                }
+            })();
+        </script>
+    </th:block>
 
 </div>
 
