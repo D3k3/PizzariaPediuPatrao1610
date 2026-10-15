@@ -12,15 +12,12 @@
 
     <div class="text-center px-4" style="max-width: 520px;">
 
-        <!-- Código do erro -->
         <div class="display-1 fw-bold text-danger" th:text="${status ?: '?'}">500</div>
 
-        <!-- Ícone -->
         <div class="my-3">
             <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
         </div>
 
-        <!-- Título baseado no status -->
         <h2 class="fw-bold mb-2">
             <span th:if="${status == 404}">Página não encontrada</span>
             <span th:if="${status == 403}">Acesso negado</span>
@@ -28,7 +25,6 @@
             <span th:if="${status != 404 and status != 403 and status != 500}">Algo deu errado</span>
         </h2>
 
-        <!-- Mensagem amigável -->
         <p class="text-muted mb-1">
             <span th:if="${status == 404}">A página que você está procurando não existe ou foi removida.</span>
             <span th:if="${status == 403}">Você não tem permissão para acessar este recurso.</span>
@@ -36,12 +32,10 @@
             <span th:if="${status != 404 and status != 403 and status != 500}">Ocorreu um erro ao processar sua requisição.</span>
         </p>
 
-        <!-- Mensagem técnica, se disponível -->
         <p class="text-muted small mb-4" th:if="${message != null and !#strings.isEmpty(message)}">
             <code th:text="${message}"></code>
         </p>
 
-        <!-- Botões de ação -->
         <div class="d-flex gap-2 justify-content-center">
             <a href="/" class="btn btn-primary">
                 <i class="bi bi-house me-1"></i> Voltar para Home
