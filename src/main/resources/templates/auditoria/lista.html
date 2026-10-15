@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Auditoria</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-journal-check me-2 text-primary"></i>Auditoria
+        </h2>
+        <span class="text-muted small">Somente leitura · telefones mascarados</span>
+    </div>
+
+    <div class="alert alert-danger" th:if="${erro}" role="alert">
+        <span th:text="${erro}"></span>
+    </div>
+
+    <form th:action="@{/auditoria}" th:object="${filtro}" method="get" class="card card-body shadow-sm mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label for="entidade" class="form-label small mb-1">Entidade</label>
+                <select id="entidade" class="form-select form-select-sm" th:field="*{entidade}">
+                    <option value="">Todas</option>
+                    <option th:each="e : ${entidades}" th:value="${e}" th:text="${e}"></option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="entidadeId" class="form-label small mb-1">Id da entidade</label>
+                <input id="entidadeId" type="text" class="form-control form-control-sm" th:field="*{entidadeId}">
+            </div>
+            <div class="col-md-2">
+                <label for="operacao" class="form-label small mb-1">Operação</label>
+                <select id="operacao" class="form-select form-select-sm" th:field="*{operacao}">
+                    <option value="">Todas</option>
+                    <option th:each="o : ${operacoes}" th:value="${o}" th:text="${o.descricao}"></option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="usuario" class="form-label small mb-1">Usuário</label>
+                <input id="usuario" type="text" class="form-control form-control-sm" th:field="*{usuario}">
+            </div>
+            <div class="col-md-1">
+                <label for="de" class="form-label small mb-1">De</label>
+                <input id="de" type="date" class="form-control form-control-sm" th:field="*{de}">
+            </div>
+            <div class="col-md-1">
+                <label for="ate" class="form-label small mb-1">Até</label>
+                <input id="ate" type="date" class="form-control form-control-sm" th:field="*{ate}">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Filtrar</button>
+                <a th:href="@{/auditoria}" class="btn btn-outline-secondary btn-sm">Limpar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card shadow-sm" th:if="${resultado != null}">
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-3">Data/hora</th>
+                        <th>Usuário</th>
+                        <th>Operação</th>
+                        <th>Entidade</th>
+                        <th>Alterações (anterior → novo)</th>
+                        <th>Justificativa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(resultado.conteudo)}">
+                        <td colspan="6" class="text-center text-muted py-5">Nenhum registro encontrado.</td>
+                    </tr>
+                    <tr th:each="evento : ${resultado.conteudo}">
+                        <td class="ps-3 text-nowrap" th:text="${#temporals.format(evento.dataHora, 'dd/MM/yyyy HH:mm:ss')}"></td>
+                        <td>
+                            <div class="fw-semibold" th:text="${evento.usuario}"></div>
+                            <span class="badge bg-secondary" th:if="${evento.perfil != null}" th:text="${evento.perfil}"></span>
+                        </td>
+                        <td th:text="${evento.operacao.descricao}"></td>
+                        <td>
+                            <div th:text="${evento.entidade}"></div>
+                            <code class="text-muted" th:text="${evento.entidadeId}"></code>
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                <li th:each="a : ${evento.alteracoes}">
+                                    <strong th:text="${a.campo}"></strong>:
+                                    <span class="text-muted" th:text="${a.valorAnterior} ?: '(vazio)'"></span>
+                                    →
+                                    <span th:text="${a.valorNovo} ?: '(vazio)'"></span>
+                                </li>
+                            </ul>
+                        </td>
+                        <td th:text="${evento.justificativa} ?: '—'"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center small">
+            <span class="text-muted"
+                  th:text="${resultado.totalElementos} + ' registro(s) · página ' + ${resultado.pagina + 1} + ' de ' + ${resultado.totalPaginas > 0 ? resultado.totalPaginas : 1}"></span>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary btn-sm" th:if="${resultado.pagina > 0}"
+                   th:href="@{/auditoria(pagina=${resultado.pagina - 1}, entidade=${filtro.entidade}, entidadeId=${filtro.entidadeId},
+                             operacao=${filtro.operacao}, usuario=${filtro.usuario}, de=${filtro.de}, ate=${filtro.ate})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:if="${resultado.pagina + 1 < resultado.totalPaginas}"
+                   th:href="@{/auditoria(pagina=${resultado.pagina + 1}, entidade=${filtro.entidade}, entidadeId=${filtro.entidadeId},
+                             operacao=${filtro.operacao}, usuario=${filtro.usuario}, de=${filtro.de}, ate=${filtro.ate})}">Próxima</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
