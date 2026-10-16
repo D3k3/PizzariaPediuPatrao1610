@@ -20,8 +20,6 @@ Sistema de pedidos da pizzaria PediuPatrão, feito com Java 21, Spring Boot 3.4.
 spring.data.mongodb.uri=mongodb+srv://USUARIO:SENHA@SEU-CLUSTER.mongodb.net/?appName=PediuPatrao
 ```
 
-Esse arquivo está no `.gitignore` e é carregado automaticamente, sem precisar ativar perfil. Outra opção é definir a variável de ambiente `MONGODB_URI`. Se nenhum dos dois existir, a aplicação tenta `mongodb://localhost:27017/pizzaria`. O banco usado é o `pizzaria`.
-
 ### Rodar
 
 ```bash
