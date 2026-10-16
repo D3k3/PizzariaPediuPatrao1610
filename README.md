@@ -2,6 +2,10 @@
 
 Sistema de pedidos da pizzaria PediuPatrão, feito com Java 21, Spring Boot 3.4.4, Spring Security, Thymeleaf e MongoDB.
 
+## Aluno
+Nome: Matheus Martins de Souza
+RGM: 11251401900
+
 ## Como executar
 
 ### Pré-requisitos
