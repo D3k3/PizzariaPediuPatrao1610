@@ -12,7 +12,6 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
-        <!-- Complemento visual; a proteção real está no SecurityConfig -->
         <a th:href="@{/pedidos/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('GERENTE','ATENDENTE')">
             <i class="bi bi-plus-lg me-1"></i> Novo Pedido
         </a>
@@ -28,7 +27,6 @@
         <span th:text="${erro}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <!-- Mensagens das ações via API (preenchidas com textContent) -->
     <div id="pedidos-alerta" class="alert d-none" role="alert"></div>
 
     <div class="card shadow-sm">
@@ -53,7 +51,6 @@
                         </td>
                     </tr>
                     <tr th:each="pedido : ${pedidos}">
-                        <!-- Pedido: cliente, tipo e id -->
                         <td class="ps-4">
                             <div class="fw-semibold" th:text="${nomesClientes[pedido.clienteId]} ?: 'Cliente não encontrado'"></div>
                             <div class="small text-muted" th:if="${pedido.tipoAtendimento != null}"
@@ -61,7 +58,6 @@
                             <code class="small text-muted" th:text="${pedido.id}"></code>
                         </td>
 
-                        <!-- Itens (ou campos do modelo antigo) -->
                         <td>
                             <ul class="list-unstyled small mb-0" th:unless="${#lists.isEmpty(pedido.itens)}">
                                 <li th:each="item : ${pedido.itens}"
@@ -71,7 +67,6 @@
                                   th:text="'(legado) ' + (${pedido.quantidade} ?: '') + ' ' + (${pedido.tipoPizza} ?: '') + ' ' + (${pedido.sabor} ?: '')"></span>
                         </td>
 
-                        <!-- Valores -->
                         <td class="small">
                             <th:block th:if="${pedido.valorTotal != null}">
                                 <div>Bruto: <span th:text="${#numbers.formatDecimal(pedido.valorBruto, 1, 'POINT', 2, 'COMMA')}"></span></div>
@@ -83,7 +78,6 @@
                             <span class="text-muted" th:if="${pedido.valorTotal == null}">—</span>
                         </td>
 
-                        <!-- Status + histórico -->
                         <td>
                             <span class="badge" th:if="${pedido.status != null}"
                                   th:classappend="${pedido.status.name() == 'RECEBIDO'} ? 'bg-secondary' :
@@ -101,7 +95,6 @@
                             </details>
                         </td>
 
-                        <!-- Entrada -->
                         <td class="small">
                             <th:block th:if="${pedido.dataEntrada != null}">
                                 <div th:text="${#temporals.format(pedido.dataEntrada, 'dd/MM/yyyy HH:mm')}"></div>
@@ -110,7 +103,6 @@
                             <span class="text-muted" th:if="${pedido.dataEntrada == null}">—</span>
                         </td>
 
-                        <!-- Saída ou cancelamento -->
                         <td class="small">
                             <th:block th:if="${pedido.dataSaida != null}">
                                 <div th:text="${#temporals.format(pedido.dataSaida, 'dd/MM/yyyy HH:mm')}"></div>
@@ -123,7 +115,6 @@
                             <span class="text-muted" th:if="${pedido.dataSaida == null and !pedido.cancelado}">—</span>
                         </td>
 
-                        <!-- Ações: status para GERENTE e ATENDENTE; desconto e cancelamento só do GERENTE (complemento visual; o backend valida perfil e regra) -->
                         <td class="text-end pe-4 text-nowrap" sec:authorize="hasAnyRole('GERENTE','ATENDENTE')">
                             <button type="button" class="btn btn-sm btn-outline-primary mb-1"
                                     th:each="proximo : ${proximosStatus[pedido.id]}"
@@ -153,7 +144,6 @@
         </div>
     </div>
 
-    <!-- Modais só para o GERENTE; o script serve GERENTE (status, desconto, cancelamento) e ATENDENTE (status) -->
     <th:block sec:authorize="hasRole('GERENTE')">
         <div class="modal fade" id="modal-cancelar" tabindex="-1" aria-labelledby="titulo-cancelar" aria-hidden="true">
             <div class="modal-dialog">

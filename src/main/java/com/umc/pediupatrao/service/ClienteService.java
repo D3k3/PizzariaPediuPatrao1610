@@ -38,7 +38,7 @@ public class ClienteService {
         return dados.getId() == null ? criar(dados) : atualizar(dados);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('GERENTE')")
     public void excluir(String id) {
         Cliente atual = obter(id);
         clienteRepository.deleteById(id);

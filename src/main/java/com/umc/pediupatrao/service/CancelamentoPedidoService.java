@@ -17,10 +17,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-/**
- * Cancelamento: exclusivo do GERENTE, com justificativa, só antes da saída.
- * Itens, valores e histórico são preservados; o pedido apenas passa a CANCELADO.
- */
 @Service
 public class CancelamentoPedidoService {
 
