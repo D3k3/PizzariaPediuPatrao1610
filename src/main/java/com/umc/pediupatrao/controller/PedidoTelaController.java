@@ -3,9 +3,11 @@ package com.umc.pediupatrao.controller;
 import com.umc.pediupatrao.dto.ItemPedidoRequest;
 import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.entity.StatusPedido;
 import com.umc.pediupatrao.entity.TipoAtendimento;
 import com.umc.pediupatrao.exception.RegraNegocioException;
 import com.umc.pediupatrao.service.ClienteService;
+import com.umc.pediupatrao.service.FluxoStatusPedido;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import org.springframework.stereotype.Controller;
@@ -16,11 +18,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Controller
 public class PedidoTelaController {
+
     private final PedidoService pedidoService;
     private final ClienteService clienteService;
     private final ProdutoService produtoService;
@@ -38,8 +43,13 @@ public class PedidoTelaController {
                 .sorted(Comparator.comparing(Pedido::getDataEntrada, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 
+        Map<String, List<StatusPedido>> proximosStatus = new HashMap<>();
+        pedidos.forEach(p -> proximosStatus.put(p.getId(),
+                FluxoStatusPedido.proximos(p.getStatus(), p.getTipoAtendimento())));
+
         model.addAttribute("pedidos", pedidos);
         model.addAttribute("nomesClientes", pedidoService.nomesDosClientes(pedidos));
+        model.addAttribute("proximosStatus", proximosStatus);
         model.addAttribute("content", "pedidos :: content");
         return "layout";
     }
@@ -56,8 +66,10 @@ public class PedidoTelaController {
         return "layout";
     }
 
+    /** Sem @Valid aqui: o PedidoService valida tudo e devolve a mensagem para a tela. */
     @PostMapping("/pedidos/salvar")
     public String salvar(@ModelAttribute("pedidoForm") PedidoRequest form, RedirectAttributes redirect) {
+        // Linhas de item deixadas totalmente em branco no formulário são ignoradas
         form.getItens().removeIf(i -> i == null
                 || ((i.getProdutoId() == null || i.getProdutoId().isBlank()) && i.getQuantidade() == null));
         try {
