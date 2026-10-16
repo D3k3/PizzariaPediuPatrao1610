@@ -66,10 +66,8 @@ public class PedidoTelaController {
         return "layout";
     }
 
-    /** Sem @Valid aqui: o PedidoService valida tudo e devolve a mensagem para a tela. */
     @PostMapping("/pedidos/salvar")
     public String salvar(@ModelAttribute("pedidoForm") PedidoRequest form, RedirectAttributes redirect) {
-        // Linhas de item deixadas totalmente em branco no formulário são ignoradas
         form.getItens().removeIf(i -> i == null
                 || ((i.getProdutoId() == null || i.getProdutoId().isBlank()) && i.getQuantidade() == null));
         try {

@@ -2,6 +2,9 @@ package com.umc.pediupatrao.service;
 
 import com.umc.pediupatrao.dto.UsuarioRequest;
 import com.umc.pediupatrao.dto.UsuarioResponse;
+import com.umc.pediupatrao.entity.AlteracaoCampo;
+import com.umc.pediupatrao.entity.EntidadeAuditada;
+import com.umc.pediupatrao.entity.OperacaoAuditoria;
 import com.umc.pediupatrao.entity.Perfil;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.exception.RegraNegocioException;
@@ -12,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -23,12 +27,19 @@ public class UsuarioService {
     private static final int SENHA_MIN = 8;
     private static final int SENHA_MAX_BYTES = 72;
 
+    static final String CAMPO_CREDENCIAL = "credencial";
+    static final String CREDENCIAL_ANTES = "***";
+    static final String CREDENCIAL_DEPOIS = "*** alterada";
+
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditoriaService auditoriaService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+            AuditoriaService auditoriaService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditoriaService = auditoriaService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -51,7 +62,12 @@ public class UsuarioService {
         usuario.setUsername(username);
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         usuario.setRole(request.getPerfil());
-        return paraResponse(usuarioRepository.save(usuario));
+        Usuario salvo = usuarioRepository.save(usuario);
+        auditoriaService.registrar(OperacaoAuditoria.CRIACAO_USUARIO, EntidadeAuditada.USUARIO, salvo.getId(),
+                List.of(new AlteracaoCampo("username", null, salvo.getUsername()),
+                        new AlteracaoCampo("role", null, salvo.getRole().name())),
+                null);
+        return paraResponse(salvo);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -76,13 +92,30 @@ public class UsuarioService {
             throw new RegraNegocioException("Não é possível rebaixar o último ADMIN do sistema.");
         }
 
+        boolean trocouSenha = request.getPassword() != null && !request.getPassword().isEmpty();
+        List<AlteracaoCampo> alteracoes = new ArrayList<>();
+        if (!Objects.equals(existente.getUsername(), username)) {
+            alteracoes.add(new AlteracaoCampo("username", existente.getUsername(), username));
+        }
+        if (existente.getRole() != request.getPerfil()) {
+            alteracoes.add(new AlteracaoCampo("role", ComparadorCampos.formatar(existente.getRole()),
+                    request.getPerfil().name()));
+        }
+        if (trocouSenha) {
+            alteracoes.add(new AlteracaoCampo(CAMPO_CREDENCIAL, CREDENCIAL_ANTES, CREDENCIAL_DEPOIS));
+        }
+
         existente.setUsername(username);
         existente.setRole(request.getPerfil());
-
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+        if (trocouSenha) {
             existente.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        return paraResponse(usuarioRepository.save(existente));
+        Usuario salvo = usuarioRepository.save(existente);
+        if (!alteracoes.isEmpty()) {
+            auditoriaService.registrar(OperacaoAuditoria.ALTERACAO_USUARIO, EntidadeAuditada.USUARIO, salvo.getId(),
+                    alteracoes, null);
+        }
+        return paraResponse(salvo);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -96,6 +129,8 @@ public class UsuarioService {
             throw new RegraNegocioException("Não é possível excluir o último ADMIN do sistema.");
         }
         usuarioRepository.deleteById(id);
+        auditoriaService.registrar(OperacaoAuditoria.EXCLUSAO_USUARIO, EntidadeAuditada.USUARIO, id,
+                List.of(new AlteracaoCampo("username", existente.getUsername(), null)), null);
     }
 
     private Usuario obter(String id) {

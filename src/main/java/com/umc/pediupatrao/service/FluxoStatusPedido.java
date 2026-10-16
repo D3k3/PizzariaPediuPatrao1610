@@ -5,16 +5,11 @@ import com.umc.pediupatrao.entity.TipoAtendimento;
 
 import java.util.List;
 
-/**
- * Mapa das transições de status permitidas pelo fluxo normal do pedido.
- * O cancelamento não passa por aqui: tem regra e rota próprias (exige justificativa).
- */
 public final class FluxoStatusPedido {
 
     private FluxoStatusPedido() {
     }
 
-    /** Próximos status possíveis; a saída depende do tipo de atendimento. */
     public static List<StatusPedido> proximos(StatusPedido atual, TipoAtendimento tipo) {
         if (atual == null) {
             return List.of();

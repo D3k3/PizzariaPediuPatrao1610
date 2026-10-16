@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-/** Avanço do pedido pelo fluxo RECEBIDO → ... → FINALIZADO. */
 @Service
 public class StatusPedidoService {
 

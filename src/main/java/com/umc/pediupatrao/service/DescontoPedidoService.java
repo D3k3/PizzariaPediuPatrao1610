@@ -13,10 +13,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-/**
- * Desconto percentual sobre o pedido inteiro: exclusivo do GERENTE, 0 < p ≤ 20,
- * só antes da saída. Um novo desconto substitui o anterior (não acumula).
- */
 @Service
 public class DescontoPedidoService {
 
