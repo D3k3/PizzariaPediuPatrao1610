@@ -25,9 +25,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        criarSeNaoExistir("admin", "teste123", Perfil.ADMIN);
-        criarSeNaoExistir("gerente", "gerente123", Perfil.GERENTE);
-        criarSeNaoExistir("atendente", "atendente123", Perfil.ATENDENTE);
+        criarSeNaoExistir("admin", "PediuAdm26", Perfil.ADMIN);
+        criarSeNaoExistir("gerente", "PediuGer26", Perfil.GERENTE);
+        criarSeNaoExistir("atendente", "PediuAte26", Perfil.ATENDENTE);
     }
 
     private void criarSeNaoExistir(String username, String senha, Perfil perfil) {
