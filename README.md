@@ -34,9 +34,9 @@ Criados automaticamente na primeira execução:
 
 | Usuário | Senha | Perfil |
 |---|---|---|
-| admin | teste123 | ADMIN |
-| gerente | gerente123 | GERENTE |
-| atendente | atendente123 | ATENDENTE |
+| admin | PediuAdm26 | ADMIN |
+| gerente | PediuGer26 | GERENTE |
+| atendente | PediuAte26 | ATENDENTE |
 
 ## Requisitos implementados
 
