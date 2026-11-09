@@ -13,4 +13,4 @@ application-local*.properties
 *.log
 HELP.md
 .DS_Store
-docs/
+*.bak
