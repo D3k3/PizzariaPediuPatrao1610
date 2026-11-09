@@ -1,6 +1,8 @@
 package com.umc.pediupatrao.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -40,6 +42,16 @@ public class ApiExceptionHandler {
     public ResponseEntity<Map<String, Object>> dadosInvalidos(BindException e, HttpServletRequest req) {
         String msg = e.getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
+                .distinct()
+                .collect(Collectors.joining(" "));
+        return resposta(HttpStatus.BAD_REQUEST, msg.isBlank() ? "Requisição inválida." : msg, req);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> parametrosInvalidos(ConstraintViolationException e,
+            HttpServletRequest req) {
+        String msg = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
                 .distinct()
                 .collect(Collectors.joining(" "));
         return resposta(HttpStatus.BAD_REQUEST, msg.isBlank() ? "Requisição inválida." : msg, req);
