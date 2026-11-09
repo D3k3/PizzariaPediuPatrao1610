@@ -214,8 +214,6 @@ public class DashboardService {
                 .toList();
     }
 
-    // ---------- regras internas ----------
-
     private PeriodoDto resolverPeriodo(LocalDate inicio, LocalDate fim) {
         LocalDate hoje = LocalDate.now(clock);
         LocalDate f = fim != null ? fim : hoje;
@@ -269,7 +267,6 @@ public class DashboardService {
         return parte.multiply(CEM).divide(total, CASAS, ARRED);
     }
 
-    /** Receita de cada item da venda, com o desconto rateado; o último item absorve os centavos. */
     private static List<BigDecimal> ratear(Pedido venda) {
         List<ItemPedido> itens = venda.getItens();
         BigDecimal bruto = venda.getValorBruto();
