@@ -40,7 +40,6 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
     private static final ZoneId FUSO = ZoneId.of("America/Sao_Paulo");
-    // Domingo, 2026-11-08, 12:00 em São Paulo
     private static final LocalDate HOJE = LocalDate.of(2026, 11, 8);
 
     @Mock private PedidoRepository repo;
@@ -57,8 +56,6 @@ class DashboardServiceTest {
         lenient().when(repo.findTop100ByStatusOrderByDataEntradaDesc(StatusPedido.FINALIZADO))
                 .thenAnswer(i -> new ArrayList<>(finalizadosRecentes));
     }
-
-    // ---------- helpers ----------
 
     private static ItemPedido item(String id, String nome, int qtd, String subtotal) {
         BigDecimal sub = new BigDecimal(subtotal);
@@ -86,8 +83,6 @@ class DashboardServiceTest {
     private static LocalDateTime dia(int d, int h, int m) {
         return LocalDateTime.of(2026, 11, d, h, m);
     }
-
-    // ---------- resumo ----------
 
     @Test
     void resumo_soFinalizadoContaComoVenda() {
@@ -145,7 +140,7 @@ class DashboardServiceTest {
 
     @Test
     void filtroTipoAtendimentoAplicaEmTodosOsCalculos() {
-        venda(dia(5, 12, 0), "100.00", item("a", "A", 1, "100.00")); // ENTREGA
+        venda(dia(5, 12, 0), "100.00", item("a", "A", 1, "100.00"));
         pedido(StatusPedido.FINALIZADO, dia(5, 13, 0), TipoAtendimento.RETIRADA, "60.00", "60.00", item("a", "A", 1, "60.00"));
         pedido(StatusPedido.CANCELADO, dia(5, 14, 0), TipoAtendimento.RETIRADA, "10.00", "10.00", item("a", "A", 1, "10.00"));
 
@@ -168,8 +163,6 @@ class DashboardServiceTest {
         assertThat(de.getValue()).isEqualTo(LocalDateTime.of(2026, 11, 1, 0, 0));
         assertThat(ate.getValue()).isEqualTo(LocalDateTime.of(2026, 11, 3, 23, 59, 59, 999_999_999));
     }
-
-    // ---------- validação de período ----------
 
     @Test
     void periodo_inicioDepoisDoFim() {
@@ -221,8 +214,6 @@ class DashboardServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    // ---------- séries ----------
-
     @Test
     void vendasPorDia_umaEntradaPorDiaComZeros() {
         venda(dia(2, 12, 0), "100.00", item("a", "A", 1, "100.00"));
@@ -267,11 +258,8 @@ class DashboardServiceTest {
         assertThat(r.stream().mapToLong(StatusQuantidadeDto::quantidade).sum()).isEqualTo(4);
     }
 
-    // ---------- produtos ----------
-
     @Test
     void produtos_rateioDoDescontoEUltimoItemAbsorveCentavos() {
-        // bruto 100.00 (33.33 + 33.33 + 33.34), total 90.00 (10% de desconto)
         pedido(StatusPedido.FINALIZADO, dia(5, 12, 0), TipoAtendimento.ENTREGA, "100.00", "90.00",
                 item("a", "Alfa", 1, "33.33"), item("b", "Beta", 1, "33.33"), item("c", "Gama", 1, "33.34"));
 
@@ -280,7 +268,6 @@ class DashboardServiceTest {
         assertThat(r).hasSize(3);
         BigDecimal soma = r.stream().map(ProdutoRankingDto::receita).reduce(BigDecimal.ZERO, BigDecimal::add);
         assertThat(soma).isEqualByComparingTo("90.00");
-        // a = 33.33 * 0.9 = 29.997 -> 30.00; b idem; c absorve o resto = 30.00
         assertThat(r).extracting(ProdutoRankingDto::receita).allSatisfy(v -> assertThat(v).isEqualByComparingTo("30.00"));
         assertThat(r.get(0).percentualDoFaturamento()).isEqualByComparingTo("33.33");
     }
@@ -299,7 +286,6 @@ class DashboardServiceTest {
     }
 
     private void cenarioRanking() {
-        // Alfa: receita 100 qtd 1 | Beta: 60 qtd 6 | Gama: 60 qtd 2 | Delta: 10 qtd 10
         venda(dia(5, 12, 0), "100.00", item("a", "Alfa", 1, "100.00"));
         venda(dia(5, 13, 0), "60.00", item("b", "Beta", 6, "60.00"));
         venda(dia(5, 14, 0), "60.00", item("g", "Gama", 2, "60.00"));
@@ -350,8 +336,6 @@ class DashboardServiceTest {
         assertThat(nomes(service.produtos(null, null, null, null, null, 20))).doesNotContain("Cancelado");
     }
 
-    // ---------- picos ----------
-
     @Test
     void picosHorarios_24PosicoesEPicoCorreto() {
         venda(dia(5, 20, 0), "10.00", item("a", "A", 1, "10.00"));
@@ -385,7 +369,6 @@ class DashboardServiceTest {
 
     @Test
     void picosDiasSemana_7PosicoesDeSegundaADomingoEPicoCorreto() {
-        // 2026-11-07 = sábado; 2026-11-02 = segunda
         venda(dia(7, 12, 0), "10.00", item("a", "A", 1, "10.00"));
         venda(dia(7, 13, 0), "10.00", item("a", "A", 1, "10.00"));
         venda(dia(2, 12, 0), "100.00", item("a", "A", 1, "100.00"));
@@ -404,12 +387,10 @@ class DashboardServiceTest {
 
     @Test
     void picosDiasSemana_empatePorQuantidadeDecidePorFaturamento() {
-        venda(dia(7, 12, 0), "10.00", item("a", "A", 1, "10.00")); // sábado
-        venda(dia(2, 12, 0), "100.00", item("a", "A", 1, "100.00")); // segunda
+        venda(dia(7, 12, 0), "10.00", item("a", "A", 1, "10.00"));
+        venda(dia(2, 12, 0), "100.00", item("a", "A", 1, "100.00"));
         assertThat(service.picosDiasSemana(null, null, null).diaPico()).isEqualTo(DayOfWeek.MONDAY);
     }
-
-    // ---------- últimos pedidos ----------
 
     private Pedido finalizado(String id, LocalDateTime entrada, LocalDateTime finalizadoEm, String valor,
             TipoAtendimento tipo, int qtd) {
@@ -429,10 +410,8 @@ class DashboardServiceTest {
 
     @Test
     void ultimosPedidos_cincoMaisRecentesPorDataDeFinalizacaoComDiferencaCorreta() {
-        // ticket 30d: dois pedidos de 100 e 200 -> 150.00
         base.add(finalizado("aaaaaaaa1111", dia(1, 12, 0), dia(1, 13, 0), "100.00", TipoAtendimento.ENTREGA, 1));
         base.add(finalizado("bbbbbbbb2222", dia(2, 12, 0), dia(2, 13, 0), "200.00", TipoAtendimento.ENTREGA, 1));
-        // entrada mais antiga, mas finalizado depois: precisa vir primeiro
         finalizado("cccccccc3333", dia(1, 8, 0), dia(8, 11, 0), "165.00", TipoAtendimento.RETIRADA, 3);
         finalizado("dddddddd4444", dia(3, 12, 0), dia(3, 13, 0), "10.00", TipoAtendimento.ENTREGA, 1);
         finalizado("eeeeeeee5555", dia(4, 12, 0), dia(4, 13, 0), "10.00", TipoAtendimento.ENTREGA, 1);
@@ -450,7 +429,6 @@ class DashboardServiceTest {
         assertThat(primeiro.quantidadeItens()).isEqualTo(3);
         assertThat(primeiro.valorTotal()).isEqualByComparingTo("165.00");
         assertThat(primeiro.tipoAtendimento()).isEqualTo(TipoAtendimento.RETIRADA);
-        // ticket médio dos 30 dias = (100 + 200) / 2 = 150
         assertThat(primeiro.diferencaTicketMedio()).isEqualByComparingTo("15.00");
         assertThat(primeiro.diferencaTicketMedioPercentual()).isEqualByComparingTo("10.00");
         assertThat(r.get(1).diferencaTicketMedio()).isEqualByComparingTo("-140.00");

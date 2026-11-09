@@ -1,7 +1,1 @@
-# Copie este arquivo para application-local.properties (ignorado pelo git).
-# Nunca coloque a string de conexao real aqui: defina a variavel de ambiente MONGODB_URI.
-#   Ex.: MONGODB_URI=mongodb+srv://USUARIO:SENHA@SEU-CLUSTER.mongodb.net/pizzaria?appName=PediuPatrao
 spring.data.mongodb.uri=${MONGODB_URI}
-
-# Para carregar os dados de demonstracao do dashboard (DashboardSeed), ative o perfil local:
-#   SPRING_PROFILES_ACTIVE=local

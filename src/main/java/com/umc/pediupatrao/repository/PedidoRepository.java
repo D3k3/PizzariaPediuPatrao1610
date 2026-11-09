@@ -11,7 +11,6 @@ import java.util.List;
 public interface PedidoRepository extends MongoRepository<Pedido, String> {
     List<Pedido> findByClienteId(String clienteId);
 
-    /** Pedidos com dataEntrada em [inicio, fim], ambos inclusivos. */
     @Query("{ 'dataEntrada': { $gte: ?0, $lte: ?1 } }")
     List<Pedido> findByDataEntradaBetween(LocalDateTime inicio, LocalDateTime fim);
 

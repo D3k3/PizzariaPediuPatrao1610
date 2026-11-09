@@ -31,11 +31,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-/**
- * Dados de demonstração para o dashboard. Só existe no perfil "local" e só grava pedidos se a coleção
- * estiver vazia. Monta os documentos diretamente (sem serviços, sem SecurityContext) e, por isso,
- * não gera nenhum evento de auditoria.
- */
 @Component
 @Profile("local")
 @Order(30)
@@ -44,8 +39,8 @@ public class DashboardSeed implements CommandLineRunner {
 
     static final int TOTAL_PEDIDOS = 120;
     static final int DIAS = 45;
-    static final int PEDIDOS_CANCELADOS = 10;   // ~8%
-    static final int PEDIDOS_EM_ANDAMENTO = 20; // ~17%; o restante (90, 75%) é FINALIZADO
+    static final int PEDIDOS_CANCELADOS = 10;
+    static final int PEDIDOS_EM_ANDAMENTO = 20;
     private static final long SEMENTE = 20260601L;
     private static final String ATENDENTE = "atendente";
     private static final String GERENTE = "gerente";
@@ -176,7 +171,6 @@ public class DashboardSeed implements CommandLineRunner {
         pedido.setValorTotal(CalculoPedido.valorTotal(pedido.getValorBruto(), pedido.getPercentualDesconto()));
         pedido.setCriadoPor(ATENDENTE);
 
-        // Cadeia de status obedecendo exatamente o FluxoStatusPedido.
         StatusPedido ultimoDoFluxo = alvo == StatusPedido.CANCELADO ? sortearPontoDeCancelamento(rnd) : alvo;
         List<StatusPedido> cadeia = cadeiaAte(ultimoDoFluxo, tipo);
         int[] minutos = new int[cadeia.size()];
@@ -224,7 +218,6 @@ public class DashboardSeed implements CommandLineRunner {
         return rnd.nextInt(100) < 60 ? TipoAtendimento.ENTREGA : TipoAtendimento.RETIRADA;
     }
 
-    /** Cancelamento só é permitido antes da saída (RECEBIDO, EM_PREPARACAO ou PRONTO). */
     private static StatusPedido sortearPontoDeCancelamento(Random rnd) {
         StatusPedido[] antes = { StatusPedido.RECEBIDO, StatusPedido.EM_PREPARACAO, StatusPedido.PRONTO };
         return antes[rnd.nextInt(antes.length)];
@@ -259,7 +252,6 @@ public class DashboardSeed implements CommandLineRunner {
         int quantos = Math.min(produtos.size(), 1 + rnd.nextInt(4));
         Set<Integer> indices = new LinkedHashSet<>();
         while (indices.size() < quantos) {
-            // Distribuição enviesada: os primeiros produtos vendem mais, gerando um ranking com contraste.
             indices.add((int) (produtos.size() * Math.pow(rnd.nextDouble(), 1.8)));
         }
         List<ItemPedido> itens = new ArrayList<>();
@@ -273,10 +265,6 @@ public class DashboardSeed implements CommandLineRunner {
         return itens;
     }
 
-    /**
-     * Sorteia o dia (sexta a domingo pesam o dobro) e o horário (concentrado em 11h-14h e 18h-22h) e garante
-     * que a última etapa do pedido não ultrapasse o instante atual.
-     */
     private static LocalDateTime sortearEntradaHistorica(LocalDateTime agora, int minutosDeDuracao, Random rnd) {
         LocalDate hoje = agora.toLocalDate();
         while (true) {
@@ -311,11 +299,11 @@ public class DashboardSeed implements CommandLineRunner {
         int faixa = rnd.nextInt(100);
         int minutoDoDia;
         if (faixa < 40) {
-            minutoDoDia = 11 * 60 + rnd.nextInt(3 * 60);        // 11:00-13:59
+            minutoDoDia = 11 * 60 + rnd.nextInt(3 * 60);
         } else if (faixa < 95) {
-            minutoDoDia = 18 * 60 + rnd.nextInt(4 * 60);        // 18:00-21:59
+            minutoDoDia = 18 * 60 + rnd.nextInt(4 * 60);
         } else {
-            minutoDoDia = 14 * 60 + rnd.nextInt(4 * 60);        // 14:00-17:59 (fora de pico)
+            minutoDoDia = 14 * 60 + rnd.nextInt(4 * 60);
         }
         return LocalTime.of(minutoDoDia / 60, minutoDoDia % 60, rnd.nextInt(60));
     }
