@@ -1,0 +1,37 @@
+#dashboard .grafico {
+    position: relative;
+    height: 300px;
+}
+
+#dashboard .grafico-rosca {
+    position: relative;
+    height: 300px;
+}
+
+#dashboard .small-box h3 {
+    font-size: 1.6rem;
+}
+
+#dashboard .small-box {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+#dashboard .small-box .small-box-icon {
+    display: block;
+    font-size: 3rem;
+    height: auto;
+}
+
+#dashboard .bloco-estado {
+    min-height: 120px;
+}
+
+#dashboard .tabela-numerica td,
+#dashboard .tabela-numerica th {
+    white-space: nowrap;
+}
+
+#dashboard .card {
+    margin-bottom: 1rem;
+}

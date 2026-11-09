@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+
+<div th:fragment="content">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4.0.2/dist/css/adminlte.min.css">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+
+    <div id="dashboard">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <h2 class="fw-bold mb-0">
+                <i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard
+            </h2>
+            <span id="atualizado-em" class="text-muted small"></span>
+        </div>
+
+        <div id="dashboard-alerta" class="alert alert-danger d-none align-items-center justify-content-between gap-3" role="alert">
+            <span id="dashboard-alerta-texto"></span>
+            <button type="button" id="dashboard-tentar" class="btn btn-outline-danger btn-sm d-none">Tentar novamente</button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-6 col-md-3 col-xl-2">
+                        <label for="filtro-inicio" class="form-label mb-1">Início</label>
+                        <input type="date" id="filtro-inicio" class="form-control">
+                    </div>
+                    <div class="col-6 col-md-3 col-xl-2">
+                        <label for="filtro-fim" class="form-label mb-1">Fim</label>
+                        <input type="date" id="filtro-fim" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label mb-1 d-block">Atalhos</label>
+                        <div class="btn-group" role="group" aria-label="Atalhos de período">
+                            <button type="button" class="btn btn-outline-secondary" data-atalho="7">7 dias</button>
+                            <button type="button" class="btn btn-outline-secondary" data-atalho="30">30 dias</button>
+                            <button type="button" class="btn btn-outline-secondary" data-atalho="90">90 dias</button>
+                        </div>
+                    </div>
+                    <div class="col-8 col-md-4 col-xl-3">
+                        <label for="filtro-tipo" class="form-label mb-1">Atendimento</label>
+                        <select id="filtro-tipo" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="ENTREGA">Entrega</option>
+                            <option value="RETIRADA">Retirada</option>
+                        </select>
+                    </div>
+                    <div class="col-4 col-md-2 col-xl-2">
+                        <button type="button" id="botao-atualizar" class="btn btn-primary w-100">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
+                        </button>
+                    </div>
+                </div>
+                <div id="filtro-erro" class="text-danger small mt-2 d-none"></div>
+            </div>
+        </div>
+
+        <div class="row" data-bloco="resumo">
+            <div class="col-12 bloco-estado d-none" data-estado="carregando">
+                <div class="d-flex justify-content-center align-items-center h-100 py-5">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando</span></div>
+                </div>
+            </div>
+            <div class="col-12 bloco-estado d-none" data-estado="erro">
+                <div class="text-center text-danger py-5">Não foi possível carregar os indicadores.</div>
+            </div>
+            <div class="col-12 d-none" data-estado="conteudo">
+                <div class="row">
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="small-box text-bg-primary">
+                            <div class="inner">
+                                <h3 data-kpi="faturamento"></h3>
+                                <p>Faturamento</p>
+                            </div>
+                            <i class="bi bi-cash-coin small-box-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="small-box text-bg-success">
+                            <div class="inner">
+                                <h3 data-kpi="quantidadeVendas"></h3>
+                                <p>Vendas</p>
+                            </div>
+                            <i class="bi bi-bag-check small-box-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="small-box text-bg-info">
+                            <div class="inner">
+                                <h3 data-kpi="ticketMedio"></h3>
+                                <p>Ticket médio</p>
+                            </div>
+                            <i class="bi bi-receipt small-box-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="small-box text-bg-danger">
+                            <div class="inner">
+                                <h3 data-kpi="quantidadeCancelados"></h3>
+                                <p>Cancelados</p>
+                            </div>
+                            <i class="bi bi-x-octagon small-box-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="small-box text-bg-warning">
+                            <div class="inner">
+                                <h3 data-kpi="totalDescontos"></h3>
+                                <p>Descontos</p>
+                            </div>
+                            <i class="bi bi-percent small-box-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm" data-bloco="vendasPorDia">
+                    <div class="card-header"><h3 class="card-title">Faturamento por dia</h3></div>
+                    <div class="card-body">
+                        <div class="bloco-estado d-none" data-estado="carregando">
+                            <div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="bloco-estado d-none text-center text-danger py-5" data-estado="erro">Não foi possível carregar este bloco.</div>
+                        <div class="bloco-estado d-none text-center text-muted py-5" data-estado="vazio">Sem dados no período</div>
+                        <div class="grafico d-none" data-estado="conteudo"><canvas id="grafico-vendas-por-dia"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm" data-bloco="pedidosPorStatus">
+                    <div class="card-header"><h3 class="card-title">Pedidos por status</h3></div>
+                    <div class="card-body">
+                        <div class="bloco-estado d-none" data-estado="carregando">
+                            <div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="bloco-estado d-none text-center text-danger py-5" data-estado="erro">Não foi possível carregar este bloco.</div>
+                        <div class="bloco-estado d-none text-center text-muted py-5" data-estado="vazio">Sem dados no período</div>
+                        <div class="grafico-rosca d-none" data-estado="conteudo"><canvas id="grafico-pedidos-por-status"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm" data-bloco="picosHorarios">
+                    <div class="card-header"><h3 class="card-title">Vendas por hora</h3></div>
+                    <div class="card-body">
+                        <div class="bloco-estado d-none" data-estado="carregando">
+                            <div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="bloco-estado d-none text-center text-danger py-5" data-estado="erro">Não foi possível carregar este bloco.</div>
+                        <div class="bloco-estado d-none text-center text-muted py-5" data-estado="vazio">Sem dados no período</div>
+                        <div class="grafico d-none" data-estado="conteudo"><canvas id="grafico-picos-horarios"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm" data-bloco="picosDiasSemana">
+                    <div class="card-header"><h3 class="card-title">Vendas por dia da semana</h3></div>
+                    <div class="card-body">
+                        <div class="bloco-estado d-none" data-estado="carregando">
+                            <div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="bloco-estado d-none text-center text-danger py-5" data-estado="erro">Não foi possível carregar este bloco.</div>
+                        <div class="bloco-estado d-none text-center text-muted py-5" data-estado="vazio">Sem dados no período</div>
+                        <div class="grafico d-none" data-estado="conteudo"><canvas id="grafico-picos-dias-semana"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-xl-7">
+                <div class="card shadow-sm" data-bloco="produtosTop">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">Produtos mais vendidos</h3>
+                        <select id="produtos-ordenar" class="form-select form-select-sm w-auto" aria-label="Ordenar produtos por">
+                            <option value="RECEITA" selected>Receita</option>
+                            <option value="QUANTIDADE">Quantidade</option>
+                        </select>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="bloco-estado d-none" data-estado="carregando">
+                            <div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="bloco-estado d-none text-center text-danger py-5" data-estado="erro">Não foi possível carregar este bloco.</div>
+                        <div class="bloco-estado d-none text-center text-muted py-5" data-estado="vazio">Sem dados no período</div>
+                        <div class="table-responsive d-none" data-estado="conteudo">
+                            <table class="table table-hover align-middle mb-0 tabela-numerica">
+                                <thead class="table-light">
+                                    <tr><th class="ps-3">Produto</th><th class="text-end">Quantidade</th><th class="text-end">Receita</th><th class="text-end pe-3">% do faturamento</th></tr>
+                                </thead>
+                                <tbody data-corpo></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-5">
+                <div class="card shadow-sm" data-bloco="produtosMenor">
+                    <div class="card-header"><h3 class="card-title">Produtos com menor receita</h3></div>
+                    <div class="card-body p-0">
+                        <div class="bloco-estado d-none" data-estado="carregando">
+                            <div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="bloco-estado d-none text-center text-danger py-5" data-estado="erro">Não foi possível carregar este bloco.</div>
+                        <div class="bloco-estado d-none text-center text-muted py-5" data-estado="vazio">Sem dados no período</div>
+                        <div class="table-responsive d-none" data-estado="conteudo">
+                            <table class="table table-hover align-middle mb-0 tabela-numerica">
+                                <thead class="table-light">
+                                    <tr><th class="ps-3">Produto</th><th class="text-end">Quantidade</th><th class="text-end">Receita</th><th class="text-end pe-3">% do faturamento</th></tr>
+                                </thead>
+                                <tbody data-corpo></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm" data-bloco="ultimosPedidos">
+                    <div class="card-header"><h3 class="card-title">Últimos 5 pedidos finalizados</h3></div>
+                    <div class="card-body p-0">
+                        <div class="bloco-estado d-none" data-estado="carregando">
+                            <div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="bloco-estado d-none text-center text-danger py-5" data-estado="erro">Não foi possível carregar este bloco.</div>
+                        <div class="bloco-estado d-none text-center text-muted py-5" data-estado="vazio">Sem dados no período</div>
+                        <div class="table-responsive d-none" data-estado="conteudo">
+                            <table class="table table-hover align-middle mb-0 tabela-numerica">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Pedido</th>
+                                        <th>Finalização</th>
+                                        <th>Atendimento</th>
+                                        <th class="text-end">Itens</th>
+                                        <th class="text-end">Valor</th>
+                                        <th class="text-end pe-3">Vs. ticket médio</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-corpo></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/dashboard.js}"></script>
+</div>
+
+</body>
+</html>
