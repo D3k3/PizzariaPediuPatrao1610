@@ -2,7 +2,7 @@
 
 Documentação do Dashboard Administrativo da PediuPatrão (API REST): requisitos, endpoints e evidências de testes.
 
-Sumário: [1. Requisitos](#1-requisitos-funcionais-e-não-funcionais) · [2. Endpoints](#2-documentação-dos-endpoints) · [3. Evidências de testes](#3-evidências-de-testes)
+Sumário: [1. Requisitos](#1-requisitos-funcionais-e-não-funcionais) · [2. Endpoints](#2-documentação-dos-endpoints) · [3. Tela do dashboard](#3-tela-do-dashboard) · [4. Evidências de testes](#4-evidências-de-testes)
 
 ---
 
@@ -257,13 +257,32 @@ Erros: 400 (`tipoAtendimento`), 401, 403. Limitação: ver 1.4.
 
 ---
 
-## 3. Evidências de testes
+## 3. Tela do dashboard
+
+**Acesso:** `GET /dashboard`, pelo item "Dashboard" do menu lateral. Perfis permitidos: **ADMIN** e **GERENTE**. ATENDENTE não vê o item e recebe 403 na rota; sem login, a rota redireciona para `/login`. A tela consome apenas a API de `/api/dashboard`; formata valores e datas, sem calcular indicadores.
+
+**Filtros (topo):** data de início, data de fim, atalhos de 7, 30 e 90 dias e tipo de atendimento (Todos, Entrega, Retirada). As datas e o tipo só valem ao clicar em **Atualizar** ou em um atalho; os atalhos preenchem as datas, usam o tipo de atendimento selecionado e recarregam. Na primeira abertura a tela usa o período padrão da API (últimos 30 dias). O horário da última atualização bem-sucedida aparece em "Atualizado às HH:mm:ss". Não há atualização automática.
+
+| Bloco da tela | O que mostra | Endpoint |
+|---------------|--------------|----------|
+| Indicadores | Faturamento, vendas, ticket médio, cancelados e descontos | `/resumo` |
+| Faturamento por dia | Gráfico de linha, um ponto por dia do período | `/vendas-por-dia` |
+| Pedidos por status | Gráfico de rosca com os 7 status | `/pedidos-por-status` |
+| Vendas por hora | Barras de 0h a 23h, com a hora de pico destacada | `/picos/horarios` |
+| Vendas por dia da semana | Barras de segunda a domingo, com o dia de pico destacado | `/picos/dias-semana` |
+| Produtos mais vendidos | Top 10 com seletor Receita/Quantidade | `/produtos` (`ordem=MAIOR`, `limite=10`) |
+| Produtos com menor receita | Os 5 de menor receita | `/produtos` (`ordenarPor=RECEITA`, `ordem=MENOR`, `limite=5`) |
+| Últimos 5 pedidos finalizados | Id curto, finalização, atendimento, itens, valor e diferença em relação ao ticket médio (verde acima, vermelho abaixo, traço quando não informada) | `/ultimos-pedidos` |
+
+**Estados e erros:** cada bloco mostra indicador de carregamento próprio e "Sem dados no período" quando não há vendas. Erro 400 exibe a mensagem da API em um alerta no topo; 401 redireciona para `/login`; 403, 500 ou falha de rede exibem alerta com **Tentar novamente**, que recarrega apenas os blocos que falharam usando o último filtro aplicado. A falha de um bloco não afeta os demais.
+
+## 4. Evidências de testes
 
 Data da execução: **2026-11-09** · Comando: `./mvnw clean test`
 
-### 3.1 Lista dos testes
+### 4.1 Lista dos testes
 
-**Demais classes:** `DashboardSeedTest` (7), `CancelamentoEDescontoTest` (2), `StatusPedidoServiceTest` (4), `UsuarioEClienteServiceTest` (2), `RotasEPermissoesTest` (7).
+**Demais classes:** `DashboardSeedTest` (7), `CancelamentoEDescontoTest` (2), `StatusPedidoServiceTest` (4), `UsuarioEClienteServiceTest` (2), `RotasEPermissoesTest` (9, inclui a presença e a ausência do item "Dashboard" no menu por perfil).
 
 **`DashboardServiceTest` (30)** — Mockito com `Clock` fixo (2026-11-08, America/Sao_Paulo):
 - Resumo: só FINALIZADO conta; ticket médio 0 sem vendas; total de descontos; pedido sem itens/sem valorTotal ignorado.
@@ -281,7 +300,10 @@ Data da execução: **2026-11-09** · Comando: `./mvnw clean test`
 - `inicio > fim` 400; `limite=50` 400; `limite=0` 400; `ordenarPor` inválido 400; `ordem` inválida 400; `tipoAtendimento` inválido 400; data mal formatada 400.
 - Formato do JSON de `/produtos`; repasse dos parâmetros ao service.
 
-### 3.2 Resultado final
+**`DashboardTelaTest` (4)** — `@WebMvcTest` da rota `/dashboard`:
+- GERENTE e ADMIN recebem 200 com a página do dashboard; ATENDENTE recebe 403; sem login redireciona para `/login`.
+
+### 4.2 Resultado final
 
 ```text
 [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0 -- in com.umc.pediupatrao.config.DashboardSeedTest
@@ -290,9 +312,10 @@ Data da execução: **2026-11-09** · Comando: `./mvnw clean test`
 [INFO] Tests run: 30, Failures: 0, Errors: 0, Skipped: 0 -- in com.umc.pediupatrao.service.DashboardServiceTest
 [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in com.umc.pediupatrao.service.StatusPedidoServiceTest
 [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- in com.umc.pediupatrao.service.UsuarioEClienteServiceTest
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0 -- in com.umc.pediupatrao.web.RotasEPermissoesTest
-[INFO] Tests run: 67, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in com.umc.pediupatrao.web.DashboardTelaTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0 -- in com.umc.pediupatrao.web.RotasEPermissoesTest
+[INFO] Tests run: 73, Failures: 0, Errors: 0, Skipped: 0
 [INFO] BUILD SUCCESS
 ```
 
-Total: **67 testes**, 0 falhas.
+Total: **73 testes**, 0 falhas.
