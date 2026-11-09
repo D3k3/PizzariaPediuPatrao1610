@@ -55,6 +55,7 @@ class RotasEPermissoesTest {
     @Autowired
     private MockMvc mvc;
 
+    @MockitoBean private com.umc.pediupatrao.service.DashboardService dashboardService;
     @MockitoBean private PedidoRepository pedidoRepository;
     @MockitoBean private ClienteRepository clienteRepository;
     @MockitoBean private ProdutoRepository produtoRepository;
