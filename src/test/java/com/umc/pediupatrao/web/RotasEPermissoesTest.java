@@ -137,4 +137,22 @@ class RotasEPermissoesTest {
                 .andExpect(status().isForbidden());
         verify(usuarioService, never()).criar(any());
     }
+
+    @Test
+    @WithMockUser(roles = "GERENTE")
+    void gerenteVeItemDashboardNoMenu() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .string(org.hamcrest.Matchers.containsString("href=\"/dashboard\"")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void atendenteNaoVeItemDashboardNoMenu() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/dashboard\""))));
+    }
 }
