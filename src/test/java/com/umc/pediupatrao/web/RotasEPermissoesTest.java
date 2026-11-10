@@ -55,6 +55,7 @@ class RotasEPermissoesTest {
     @Autowired
     private MockMvc mvc;
 
+    @MockitoBean private com.umc.pediupatrao.service.DashboardService dashboardService;
     @MockitoBean private PedidoRepository pedidoRepository;
     @MockitoBean private ClienteRepository clienteRepository;
     @MockitoBean private ProdutoRepository produtoRepository;
@@ -135,5 +136,23 @@ class RotasEPermissoesTest {
         enviarJson("/api/usuarios", "{\"username\": \"novo\", \"password\": \"senha1234\", \"perfil\": \"ADMIN\"}")
                 .andExpect(status().isForbidden());
         verify(usuarioService, never()).criar(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "GERENTE")
+    void gerenteVeItemDashboardNoMenu() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .string(org.hamcrest.Matchers.containsString("href=\"/dashboard\"")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void atendenteNaoVeItemDashboardNoMenu() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/dashboard\""))));
     }
 }

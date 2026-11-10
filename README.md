@@ -2,6 +2,10 @@
 
 Sistema de pedidos da pizzaria PediuPatrão, feito com Java 21, Spring Boot 3.4.4, Spring Security, Thymeleaf e MongoDB.
 
+> Dashboard administrativo (requisitos, API e evidências de testes): [docs/DOCUMENTACAO.md](docs/DOCUMENTACAO.md)
+
+> O dashboard fica em `/dashboard` (menu "Dashboard") e é acessível apenas aos perfis ADMIN e GERENTE.
+
 ## Aluno
 Nome: Matheus Martins de Souza
 RGM: 11251401900

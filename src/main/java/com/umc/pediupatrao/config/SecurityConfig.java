@@ -70,6 +70,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**", "/error").permitAll()
 
+                        .requestMatchers("/api/dashboard/**", "/dashboard").hasAnyRole("ADMIN", "GERENTE")
+
                         .requestMatchers("/usuarios/**", "/api/usuarios/**").hasRole("ADMIN")
 
                         .requestMatchers("/auditoria/**", "/api/auditoria/**").hasAnyRole("ADMIN", "GERENTE")
