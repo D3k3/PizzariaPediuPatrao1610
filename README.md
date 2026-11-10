@@ -4,7 +4,9 @@ Sistema de pedidos da pizzaria PediuPatrão, feito com Java 21, Spring Boot 3.4.
 
 > Dashboard administrativo (requisitos, API e evidências de testes): [docs/DocumentacaoDashboard.md](docs/DocumentacaoDashboard.md)
 
-> O dashboard fica em `/dashboard` (menu "Dashboard") e é acessível apenas aos perfis ADMIN e GERENTE.
+## Vídeo de demonstração do Dashboard
+
+[Assistir no YouTube](https://youtu.be/YHdGzrHEdu8)
 
 ## Aluno
 Nome: Matheus Martins de Souza
